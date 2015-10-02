@@ -44,13 +44,40 @@ void write_symbol(FILE* output, uint32_t addr, const char* name) {
    to store this value for use during add_to_table().
  */
 SymbolTable* create_table(int mode) {
-    /* YOUR CODE HERE */
-    return NULL;
+    /* Allocate the memory for the struct */
+    SymbolTable* newST = malloc(sizeof(SymbolTable));
+
+    /* Check return value to make sure we got memory */
+    if(!newST) allocation_failed();
+
+    /* Store mode and initialize data*/
+    newST->mode = mode;
+    newST->len = 0;
+    newST->cap = INITIAL_SIZE;
+    newST->tbl = malloc(INITIAL_SIZE * sizeof(Symbol));
+    
+    /* Check our return value to make sure we got memory */
+    if(!newST->tbl) {
+      free(newST);
+      allocation_failed();
+    }
+
+    /* Return ST pointer */
+    return newST;
 }
 
 /* Frees the given SymbolTable and all associated memory. */
 void free_table(SymbolTable* table) {
-    /* YOUR CODE HERE */
+    int loc = 0;
+    while (loc < table->len){
+      Symbol* sym = &(table->tbl[loc]);
+      // free(sym->name);
+      // free(sym->addr);
+      free(sym);
+      loc++;
+    }
+    free(table->tbl);
+    free(table);
 }
 
 /* A suggested helper function for copying the contents of a string. */
@@ -79,15 +106,55 @@ static char* create_copy_of_str(const char* str) {
    Otherwise, you should store the symbol name and address and return 0.
  */
 int add_to_table(SymbolTable* table, const char* name, uint32_t addr) {
-    /* YOUR CODE HERE */
+    
+  /* check that addr is word-aligned */
+  if (addr % 4) {
+    addr_alignment_incorrect();
     return -1;
+  }
+  
+  /* check that name exists in the table if mode is UNIQUE */
+  if ((table->mode) && (get_addr_for_symbol(table, name) != -1)) {
+    name_already_exists(name);
+    return -1;
+  }
+  
+  /* Resize the tbl array if necessary */
+  if (table->len == table->cap){
+    table->tbl = (Symbol*) realloc(table->tbl, sizeof(*(table->tbl)) * SCALING_FACTOR);
+    if (!table->tbl) allocation_failed();
+    table->cap = table->cap * SCALING_FACTOR;
+  }
+
+  /* Create a copy of the name string */
+  char* name_copy = create_copy_of_str(name);
+
+  /* Add the new name and addr*/
+  Symbol* new_symbol =  malloc(sizeof(Symbol));
+  if (!new_symbol) allocation_failed();
+  new_symbol->name = name_copy;
+  new_symbol->addr = addr;
+  table->tbl[(table->len)] = *new_symbol;
+  
+  /* Update tbl length and return 0*/
+  table->len++;
+  return 0;
 }
 
 /* Returns the address (byte offset) of the given symbol. If a symbol with name
    NAME is not present in TABLE, return -1.
  */
 int64_t get_addr_for_symbol(SymbolTable* table, const char* name) {
-    /* YOUR CODE HERE */ 
+    
+    /* index through the tbl array and try to find a copy of the name */
+    int loc = 0;
+    while (loc < table->len){
+      Symbol* sym = &(table->tbl[loc]);
+      if (!(strcmp(sym->name, name))) return sym->addr;
+      loc++;
+    }
+
+    /* if not present return -1 */
     return -1;
 }
 
@@ -95,5 +162,13 @@ int64_t get_addr_for_symbol(SymbolTable* table, const char* name) {
    perform the write. Do not print any additional whitespace or characters.
  */
 void write_table(SymbolTable* table, FILE* output) {
-    /* YOUR CODE HERE */
+
+    /* index through the tbl array and write each to Output */
+    int loc = 0;
+    while (loc < table->len){
+      Symbol* sym = &(table->tbl[loc]);
+      write_symbol(output, sym->addr, sym->name);
+      loc++;
+      // NEED TO REMOVE WHITESPACE/CHARACTERS?                                  DELETE WHEN DONE
+    }
 }
