@@ -45,7 +45,7 @@ void write_symbol(FILE* output, uint32_t addr, const char* name) {
  */
 SymbolTable* create_table(int mode) {
     /* Allocate the memory for the struct */
-    SymbolTable* newST = malloc(sizeof(SymbolTable));
+    SymbolTable* newST = (SymbolTable*) malloc(sizeof(SymbolTable));
 
     /* Check return value to make sure we got memory */
     if(!newST) allocation_failed();
@@ -54,7 +54,7 @@ SymbolTable* create_table(int mode) {
     newST->mode = mode;
     newST->len = 0;
     newST->cap = INITIAL_SIZE;
-    newST->tbl = malloc(INITIAL_SIZE * sizeof(Symbol));
+    newST->tbl = (Symbol*) malloc(INITIAL_SIZE * sizeof(Symbol));
     
     /* Check our return value to make sure we got memory */
     if(!newST->tbl) {
@@ -73,7 +73,7 @@ void free_table(SymbolTable* table) {
       Symbol* sym = &(table->tbl[loc]);
       // free(sym->name);
       // free(sym->addr);
-      free(sym);
+      free(sym->name);
       loc++;
     }
     free(table->tbl);
@@ -121,21 +121,27 @@ int add_to_table(SymbolTable* table, const char* name, uint32_t addr) {
   
   /* Resize the tbl array if necessary */
   if (table->len == table->cap){
-    table->tbl = (Symbol*) realloc(table->tbl, sizeof(*(table->tbl)) * SCALING_FACTOR);
+    table->tbl = (Symbol*) realloc(table->tbl, (table->len * sizeof(Symbol)) * SCALING_FACTOR);
     if (!table->tbl) allocation_failed();
     table->cap = table->cap * SCALING_FACTOR;
+    // write_to_log("len: %d == cap: %d, resizing %d by %d\n", table->len, table->cap, (sizeof(table->tbl)), SCALING_FACTOR);                       // DELETE WHEN DONE
   }
 
   /* Create a copy of the name string */
   char* name_copy = create_copy_of_str(name);
 
   /* Add the new name and addr*/
-  Symbol* new_symbol =  malloc(sizeof(Symbol));
-  if (!new_symbol) allocation_failed();
+  // Symbol* new_symbol =  malloc(sizeof(Symbol));
+  Symbol* new_symbol = &(table->tbl[(table->len)]);
+    // write_to_log("TEST 6\n");    
+  // if (!new_symbol) allocation_failed();
   new_symbol->name = name_copy;
+    // write_to_log("TEST 7\n");    
   new_symbol->addr = addr;
-  table->tbl[(table->len)] = *new_symbol;
+    // write_to_log("Symbol.name: %s \n", new_symbol->name);    
+  // table->tbl[(table->len)] = *new_symbol;
   
+    // write_to_log("added: %s with address: %d at location %d\n", new_symbol->name, new_symbol->addr, table->len);                       // DELETE WHEN DONE
   /* Update tbl length and return 0*/
   table->len++;
   return 0;
@@ -150,7 +156,12 @@ int64_t get_addr_for_symbol(SymbolTable* table, const char* name) {
     int loc = 0;
     while (loc < table->len){
       Symbol* sym = &(table->tbl[loc]);
-      if (!(strcmp(sym->name, name))) return sym->addr;
+    // write_to_log("sym->name: %s & addr: %d at location %d\n", sym->name, sym->addr, loc);                       // DELETE WHEN DONE
+      if (!(strcmp(sym->name, name))) {
+        // write_to_log("sym->name: %s & addr: %d at location %d\n", sym->name, sym->addr, loc);                       // DELETE WHEN DONE
+   
+        return sym->addr;
+      }
       loc++;
     }
 

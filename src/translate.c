@@ -44,32 +44,70 @@ const int TWO_POW_SEVENTEEN = 131072;    // 2^17
  */
 unsigned write_pass_one(FILE* output, const char* name, char** args, int num_args) {
     if (strcmp(name, "li") == 0) {
-        /* YOUR CODE HERE */
-        return 0;  
+      /* Check that the number of arguments is correct */
+      if (num_args != 2) return 0;
+
+      /* Check that args[1] is a number and that the number is representable by 32 bits - signed or unsigned*/
+      long int* test_num;
+      translate_num(test_num, args[1], LONG_MIN, LONG_MAX);
+      if (test_num == 0) return 0;
+
+      /* Check if immediate can fit into 16 bits */ 
+      if (!(((test_num & 0xffff8000) + 0x8000) & 0xffff7fff)){
+        write_lui (arg[0], test_num);
+        addiu (arg[0], rs, test_num);
+      } else {
+        write_lui (arg[0], test_num);
+        write_ori (arg[0], rs, test_num);
+      }
+      return 2;  
+
     } else if (strcmp(name, "move") == 0) {
-        /* YOUR CODE HERE */
-        return 0;  
+        if (num_args != 2) return 0;
+        add (args[0], args[1], '$0');
+        return 1;  
+
     } else if (strcmp(name, "blt") == 0) {
-        /* YOUR CODE HERE */
-        return 0;  
+        if (num_args != 3) return 0;
+        slt ("$1", args[0], args[1]);
+        return 1;  
+
     } else if (strcmp(name, "bgt") == 0) {
-        /* YOUR CODE HERE */
-        return 0;  
+        if (num_args != 3) return 0;
+        slt ($rs, $rt, args[3]); 
+        bne ($rs, $rt, args[3]);
+        return 2;  
+
     } else if (strcmp(name, "traddu") == 0) {
-        /* YOUR CODE HERE */
-        return 0;       
+        if (num_args != 3) return 0;
+        add (args[0], args[1]);
+        add (args[0], args[2]);
+        return 2;    
+
     } else if (strcmp(name, "swpr") == 0) {
-        /* YOUR CODE HERE */
-        return 0;       
+        if (num_args != 2) return 0;
+        or (args[0], args[0], args[1]);
+        or (args[1], args[0], args[1]);
+        or (args[0], args[0], args[1]);
+        return 3;   
+
     } else if (strcmp(name, "mul") == 0) {
-        /* YOUR CODE HERE */
-        return 0;       
+        if (num_args != 3) return 0;
+        mult (args[1], args[2]);
+        mflo (args[0]);
+        return 2;    
+
     } else if (strcmp(name, "div") == 0) {
-        /* YOUR CODE HERE */
-        return 0;       
+        if (num_args != 2) return 0;
+        div (args[1], args[2]);
+        mflo (args[0]);
+        return 2;     
+          
     } else if (strcmp(name, "rem") == 0) {
-        /* YOUR CODE HERE */
-        return 0;       
+        if (num_args != 2) return 0;
+        div (args[1], args[2]);
+        mfli (args[0]);
+        return 2;       
     } 
     write_inst_string(output, name, args, num_args);
     return 1;
