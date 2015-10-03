@@ -150,18 +150,16 @@ void test_table_2() {
     for (int i = 0; i < max; i++) {
         sprintf(buf, "%d", i);
         retval = add_to_table(tbl, buf, 4 * i);
-write_to_log("%d\n", i);                                            // DELETE WHEN DONE
         CU_ASSERT_EQUAL(retval, 0);
     }
 
     for (int i = 0; i < max; i++) {
         sprintf(buf, "%d", i);
         retval = get_addr_for_symbol(tbl, buf);
-write_to_log("%d\n", retval);                                            // DELETE WHEN DONE
         CU_ASSERT_EQUAL(retval, 4 * i);
     }
 
-    // free_table(tbl);
+    free_table(tbl);
 }
 
 /****************************************
@@ -195,9 +193,9 @@ int main(int argc, char** argv) {
     if (!CU_add_test(pSuite2, "test_table_0", test_table_0)) {
         goto exit;
     }
-    // if (!CU_add_test(pSuite2, "test_table_1", test_table_1)) {
-    //     goto exit;
-    // }
+    if (!CU_add_test(pSuite2, "test_table_1", test_table_1)) {
+        goto exit;
+    }
     if (!CU_add_test(pSuite2, "test_table_2", test_table_2)) {
         goto exit;
     }
