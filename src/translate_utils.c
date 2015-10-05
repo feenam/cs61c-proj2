@@ -3,6 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <errno.h>
+
 #include "translate_utils.h"
 
 void write_inst_string(FILE* output, const char* name, char** args, int num_args) {
@@ -58,8 +60,20 @@ int translate_num(long int* output, const char* str, long int lower_bound,
     if (!str || !output) {
         return -1;
     }
-    /* YOUR CODE HERE */
-    return -1;
+    char* ptr_end;
+    long int strtol_out;
+    errno = 0;    /* To distinguish success/failure after call */
+    strtol_out = strtol(str, &ptr_end, 0);
+
+    /* Test to see if strtol returns an error, whether the input has no digits,
+       if str is within bounds, or if something came after a valid number */
+    if ((errno != 0) || (ptr_end == str) || (lower_bound > strtol_out) || 
+        (strtol_out > upper_bound) || (*ptr_end != '\0')) {
+      return -1;
+    }
+    
+    *output = strtol_out;
+    return 0;
 }
 
 /* Translates the register name to the corresponding register number. Please
@@ -73,6 +87,18 @@ int translate_reg(const char* str) {
     else if (strcmp(str, "$at") == 0)   return 1;
     else if (strcmp(str, "$v0") == 0)   return 2;
     else if (strcmp(str, "$a0") == 0)   return 4;
-    /* YOUR CODE HERE */
+    else if (strcmp(str, "$a1") == 0)   return 5;
+    else if (strcmp(str, "$a2") == 0)   return 6;
+    else if (strcmp(str, "$a3") == 0)   return 7;
+    else if (strcmp(str, "$t0") == 0)   return 8;
+    else if (strcmp(str, "$t1") == 0)   return 9;
+    else if (strcmp(str, "$t2") == 0)   return 10;
+    else if (strcmp(str, "$t3") == 0)   return 11;
+    else if (strcmp(str, "$s0") == 0)   return 16;
+    else if (strcmp(str, "$s1") == 0)   return 17;
+    else if (strcmp(str, "$s2") == 0)   return 18;
+    else if (strcmp(str, "$s3") == 0)   return 19;
+    else if (strcmp(str, "$sp") == 0)   return 29;
+    else if (strcmp(str, "$ra") == 0)   return 31;
     else                                return -1;
 }

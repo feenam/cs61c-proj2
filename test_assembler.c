@@ -89,6 +89,16 @@ void test_translate_num() {
  *  Test cases for tables.c 
  ****************************************/
 
+void test_table_0() {
+    int retval;
+
+    SymbolTable* tbl0 = create_table(SYMTBL_UNIQUE_NAME);
+    CU_ASSERT_PTR_NOT_NULL(tbl0);
+
+    free_table(tbl0);
+
+}
+
 void test_table_1() {
     int retval;
 
@@ -133,7 +143,6 @@ void test_table_1() {
 
 void test_table_2() {
     int retval, max = 100;
-
     SymbolTable* tbl = create_table(SYMTBL_UNIQUE_NAME);
     CU_ASSERT_PTR_NOT_NULL(tbl);
 
@@ -141,12 +150,14 @@ void test_table_2() {
     for (int i = 0; i < max; i++) {
         sprintf(buf, "%d", i);
         retval = add_to_table(tbl, buf, 4 * i);
+write_to_log("%d\n", i);                                            // DELETE WHEN DONE
         CU_ASSERT_EQUAL(retval, 0);
     }
 
     for (int i = 0; i < max; i++) {
         sprintf(buf, "%d", i);
         retval = get_addr_for_symbol(tbl, buf);
+write_to_log("%d\n", retval);                                            // DELETE WHEN DONE
         CU_ASSERT_EQUAL(retval, 4 * i);
     }
 
@@ -179,6 +190,9 @@ int main(int argc, char** argv) {
     /* Suite 2 */
     pSuite2 = CU_add_suite("Testing tables.c", init_log_file, NULL);
     if (!pSuite2) {
+        goto exit;
+    }
+    if (!CU_add_test(pSuite2, "test_table_0", test_table_0)) {
         goto exit;
     }
     if (!CU_add_test(pSuite2, "test_table_1", test_table_1)) {
