@@ -76,11 +76,12 @@ write_machine_code_find_text:
 	
 	# 1. Initialize the byte offset to zero. We will need this for any instructions
 	# that require relocation:
-	# YOUR_INSTRUCTIONS_HERE
+	li $s9 0
 
 write_machine_code_next_inst:
 	# 2. Call readline() while passing in the correct arguments:
-	# YOUR_INSTRUCTIONS_HERE
+	move $a0 $s1
+	jal readline
 
 	# Check whether readline() returned an error.
 	blt $v0, $0, write_machine_code_error
@@ -92,22 +93,33 @@ write_machine_code_next_inst:
 	
 	# 3. Looks like there is another instruction. Call parse_int() with base=16
 	# to convert the instruction into a number, and store it into a register:
-	# YOUR_INSTRUCTIONS_HERE
-	
+	move $a0 $v1 
+	li $a0 16
+	jal parse_int
+	move $s8 $v0
+
 	# 4. Check if the instruction needs relocation. If it does not, branch to
 	# the label write_machine_code_to_file:
-	# YOUR_INSTRUCTIONS_HERE
+	move $a0 $s8
+	jal inst_needs_relocatation
+	beq $v0 0 write_machine_code_to_file
 	
 	# 5. Here we handle relocation. Call relocate_inst() with the appropriate
 	# arguments, and store the relocated instruction in the appropriate register:
-	# YOUR_INSTRUCTIONS_HERE
+	move $a0 $v0 
+    move $a1 $s9
+	move $a2 $s2
+	move $a3 $s3 
+	jal relocate_inst
+	move $a0 $v0 
 
 write_machine_code_to_file:
 	# 6. Write the instruction into a string buffer via hex_to_str():
-	# YOUR_INSTRUCTIONS_HERE 
+	move $a1 $s0
+	jal hex_to_str 
 	
 	# 7. Increment the byte offset by the appropriate amount:
-	# YOUR_INSTRUCTIONS_HERE
+	add $s9 $s9 4
 
 	# Here, we use the write to file syscall. WE specify the output file as $a0.
 	move $a0, $s0

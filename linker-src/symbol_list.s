@@ -49,6 +49,16 @@
 #------------------------------------------------------------------------------
 addr_for_symbol:
         # YOUR CODE HERE
+        beq $a0, $0, name_not_found
+        lw $t0, 0($a0)
+        beq $t0, $a1, name_found
+        lw $a0, 8($a0)
+        j addr_for_symbol
+name_found:
+        lw $v0, 4($a0)
+        jr $ra
+name_not_found:
+        li $v0, -1
         jr $ra
         
 #------------------------------------------------------------------------------
@@ -69,8 +79,39 @@ addr_for_symbol:
 #
 # Returns: the new list
 #------------------------------------------------------------------------------
-add_to_list:    
-        # YOUR CODE HERE
+add_to_list:
+        addiu $sp $sp -8
+        sw $ra 0($sp)
+        sw $a0 4($sp)
+
+        jal new_node    #v0 is new created node at this point
+
+        lw $ra 0($sp)
+        lw $a0 4($sp)   #restoring ra and a0
+        addiu $sp $sp 8
+
+        addiu $sp $sp -16
+        sw $ra 0($sp)
+        sw $a0 4($sp)
+        sw $v0 8($sp)
+        sw $a2 12($sp)
+
+        move $a0 $a1
+
+        jal copy_of_str
+
+        move $t0 $v0    #t0 = copied string
+
+        lw $ra 0($sp)
+        lw $a0 4($sp)   
+        lw $v0 8($sp)
+        lw $a2 12($sp)
+        addiu $sp $sp 16
+
+        sw $t0 0($v0)
+        sw $a2 4($v0)
+        sw $a0 8($v0)
+
         jr $ra
 
 ###############################################################################
