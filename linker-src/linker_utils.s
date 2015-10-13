@@ -29,7 +29,7 @@
 .include "parsetools.s"
 
 .data
-textLabel:      .asciiz ".text"
+textLabel:      .asciiz ".text\r"
 symLabel:       .asciiz ".symbol"
 relocLabel: .asciiz ".relocation"
 
@@ -46,7 +46,12 @@ relocLabel: .asciiz ".relocation"
 # Returns: 1 if the instruction needs relocation, 0 otherwise.
 #------------------------------------------------------------------------------
 inst_needs_relocation:
-        # YOUR CODE HERE
+        srl $a0 $a0 26              # create count of shifts
+        li $v0 1
+        beq $a0 2 RELOC_END 
+        beq $a0 3 RELOC_END
+        li $v0 0 
+RELOC_END:        
         jr $ra
         
 #------------------------------------------------------------------------------
@@ -68,7 +73,62 @@ inst_needs_relocation:
 # Returns: the relocated instruction, or -1 if error
 #------------------------------------------------------------------------------
 relocate_inst:
-        # YOUR CODE HERE
+        addiu $sp, $sp, -20
+        sw $s3, 16($sp)
+        sw $s2, 12($sp)
+        sw $s1, 8($sp)
+        sw $s0, 4($sp)
+        sw $ra, 0($sp)
+
+        move $s0 $a0
+        move $s1 $a1
+        move $s2 $a2
+        move $s3 $a3
+
+        move $a0 $s3            # load the reloctation table into a0 for symbol_for_addr
+        addiu $sp $sp -4
+        sw $ra 0($sp)
+        jal symbol_for_addr     # run byte offset through symbol_for_addr
+        lw $ra, 0($sp)
+        addiu $sp, $sp, 4
+
+        beq $v0 $0 MINUS1       # if null return -1
+        
+        move $a0 $s2            # load the symbol table into a0 for addr_for_symbol
+        move $a1 $v0 
+        addiu $sp $sp -4
+        sw $ra 0($sp)
+        jal addr_for_symbol     # run result through addr_for_symbol 
+        lw $ra, 0($sp)
+        addiu $sp, $sp, 4
+        
+        li $t4 -1
+        beq $v0 $t4 MINUS1       # if null return -1 
+        
+        srl $v0 $v0 2           # shift the absolute address right by 2  
+        li $t0 0x03FFFFFF       # set a mask for the bottom 26 bits 
+        and $v0 $v0 $t0         # set top 6 bits of absolute address to 0
+        
+        li $t0 0xFC000000       # set a mask for the top 6 bits
+        and $t1 $s0 $t0         # set t1 t0 masked top 6 bits of instruction
+        or $v0 $v0 $t1          # or the two together
+
+        lw $s3, 16($sp)
+        lw $s2, 12($sp)
+        lw $s1, 8($sp)
+        lw $s0, 4($sp)
+        lw $ra, 0($sp)
+        addiu $sp, $sp, 20
+        jr $ra
+
+MINUS1:
+        li $v0 -1 
+        lw $s3, 16($sp)
+        lw $s2, 12($sp)
+        lw $s1, 8($sp)
+        lw $s0, 4($sp)
+        lw $ra, 0($sp)
+        addiu $sp, $sp, 20
         jr $ra
 
 ###############################################################################

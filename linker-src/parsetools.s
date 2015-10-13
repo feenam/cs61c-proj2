@@ -36,7 +36,27 @@
 # Returns: none
 #------------------------------------------------------------------------------
 hex_to_str:
-	# YOUR CODE HERE
+	li $t0 0x0000000F 	# create a mask for the bottom 4 bits
+	li $t1 28 			# create count of shifts 
+LOOP:
+	srlv $t2 $a0 $t1 	# shift intput integer to 4 bits
+	and $t2 $t2 $t0 	# AND with mask
+	ble $t2 9 WRITE 	# branch if less than 10
+	addiu $t2 $t2 39 	# add 87 to change to lower case letters 
+WRITE:
+	addiu $t2 $t2 48 	# add 87 to change to lower case letters 
+	sb $t2 0($a1) 		# add to string
+	beq $t1 0 PARSE_END 		# if the count is 0 finish the loop
+	addiu $t1 $t1 -4 	# decrement count by 4
+	addiu $a1 $a1 1 	# increment the string pointer
+	j LOOP 				# jump to loop
+PARSE_END:
+	addiu $a1 $a1 1 	# increment the string pointer
+	li $t3 10 			# add the new line
+	sb $t3 0($a1) 		# add to the string
+	addiu $a1 $a1 1 	# increment the string pointer
+	li $t3 0 			# add the new line
+	sb $t3 0($a1) 		# add to the string
 	jr $ra
 
 ###############################################################################

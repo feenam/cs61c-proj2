@@ -49,6 +49,36 @@
 #------------------------------------------------------------------------------
 addr_for_symbol:
         # YOUR CODE HERE
+        addiu $sp $sp -12
+        sw $s0 0($sp)
+        sw $s1 4($sp)
+        sw $ra 8($sp)
+        
+        move $s0 $a0 # storing symbolList ptr
+        move $s1 $a1
+addr_for_symbol_loop:
+        beq $s0, $0, name_not_found
+        lw $a0, 0($s0)
+	move $a1, $s1
+
+        jal streq
+
+        beq $v0 $0 name_found
+        lw $s0, 8($s0)
+        j addr_for_symbol_loop
+name_found:
+        lw $v0 4($s0)
+        lw $ra 8($sp)
+        lw $s1 4($sp)
+        lw $s0 0($sp)
+        addiu $sp $sp 12
+        jr $ra
+name_not_found:
+        lw $ra 8($sp)
+        lw $s1 4($sp)
+        lw $s0 0($sp)
+        addiu $sp $sp 12
+        li $v0, -1
         jr $ra
         
 #------------------------------------------------------------------------------
@@ -69,8 +99,42 @@ addr_for_symbol:
 #
 # Returns: the new list
 #------------------------------------------------------------------------------
-add_to_list:    
-        # YOUR CODE HERE
+add_to_list:
+        addiu $sp $sp -24
+        sw $ra 0($sp)
+        sw $s0 4($sp)
+        sw $s1 8($sp)
+        sw $s2 12($sp)
+        sw $s3 16($sp)
+        sw $s4 20($sp)
+
+        move $s0 $a0
+        move $s1 $a1
+        move $s2 $a2
+
+        jal new_node    #v0 is new created node at this point
+
+        move $s3 $v0    # saving new node
+        move $a0 $s1    # copying name of symbol
+
+        jal copy_of_str
+
+        move $s4 $v0    #t0 = copied string
+
+        sw $s4 0($s3)
+        sw $s2 4($s3)
+        sw $s0 8($s3)
+
+        move $v0 $s3
+
+        lw $ra 0($sp)
+        lw $s0 4($sp)   
+        lw $s1 8($sp)
+        lw $s2 12($sp)
+        lw $s3 16($sp)
+        lw $s4 20($sp)
+        addiu $sp $sp 24
+
         jr $ra
 
 ###############################################################################

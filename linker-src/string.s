@@ -28,6 +28,14 @@ tab:	.asciiz "\t"
 #------------------------------------------------------------------------------
 strlen:
 	# YOUR CODE HERE
+	addiu $v0, $0, 0
+strlen_loop:				
+	lb $t0, 0($a0)
+	beq $t0, $0, end_strlen
+	addiu $v0, $v0 1
+	addiu $a0, $a0, 1
+	j strlen_loop
+end_strlen:
 	jr $ra
 
 #------------------------------------------------------------------------------
@@ -41,9 +49,19 @@ strlen:
 # Returns: the destination array
 #------------------------------------------------------------------------------
 strncpy:
-	# YOUR CODE HERE
+	la $t1, 0($a0)
+loop:
+	lbu $t0, 0($a1)
+	beq $a2, $0, exit
+	sb $t0, 0($a0) 
+	addi $a0, $a0, 1 
+	addi $a1, $a1, 1
+	addi $a2, $a2, -1
+	j loop
+exit:
+	sb $0, 0($a0)
+	la $v0, 0($t1)
 	jr $ra
-
 #------------------------------------------------------------------------------
 # function copy_of_str()
 #------------------------------------------------------------------------------
@@ -57,7 +75,34 @@ strncpy:
 # Returns: pointer to the copy of the string
 #------------------------------------------------------------------------------
 copy_of_str:
-	# YOUR CODE HERE
+	# YOUR CODE HERE	
+	addiu $sp $sp -12 # Epilogue 
+	sw $s1 8($sp)
+	sw $s0 4($sp)
+	sw $ra 0($sp)
+
+	move $s0 $a0 #copy a0 to s0
+
+	jal strlen  # get the length of the string
+	
+	move $s1 $v0 # store returned value
+
+	move $a0 $s1 # set a0 to number of bytes to allocate for syscall 
+	li $v0 9 # load 9 into v0 for syscall
+	syscall # malloc memory 
+	
+	move $a2 $s1 # set a2 to length of string for strcpy
+	addiu $a2 $a2 1 # add one to string length for null terminator
+	move $a1 $s0 # set a1 to string source pointer for strcpy
+	move $a0 $v0 # set a0 to allocated address for strcpy
+	
+	jal strncpy # copy string into a0
+	
+	lw $s1 8($sp)
+	lw $s0 4($sp)
+	lw $ra 0($sp)	 # Prologue 
+	addiu $sp $sp 12
+	
 	jr $ra
 
 ###############################################################################
@@ -82,7 +127,7 @@ streq_loop:
 	addiu $a0, $a0, 1
 	addiu $a1, $a1, 1
 	bne $t0, $t1, streq_false
-	beq $t0, $0, streq_true
+	beq $t1, $0, streq_true
 	j streq_loop
 streq_true:
 	li $v0, 0
