@@ -27,14 +27,20 @@ tab:	.asciiz "\t"
 # Returns: the length of the string
 #------------------------------------------------------------------------------
 strlen:
-	addiu $v0, $0, 0
+	addiu $sp $sp -4 		# Prologue 
+	sw $ra 0($sp)
+
+	addiu $v0, $0, 0		# set v0 to 0 (our counter)
 strlen_loop:				
-	lb $t0, 0($a0)
-	beq $t0, $0, end_strlen
-	addiu $v0, $v0 1
-	addiu $a0, $a0, 1
-	j strlen_loop
+	lb $t0, 0($a0)			# load a byte from the string into t0 
+	beq $t0, $0, end_strlen	# If the byte is null then end
+	addiu $v0, $v0, 1 		# increment the counter
+	addiu $a0, $a0, 1       # increment the string pointer
+	j strlen_loop			# Loop
 end_strlen:
+
+	lw $ra, 0($sp)			# Epilogue
+	addiu $sp, $sp, 4  		
 	jr $ra
 
 #------------------------------------------------------------------------------
@@ -48,18 +54,24 @@ end_strlen:
 # Returns: the destination array
 #------------------------------------------------------------------------------
 strncpy:
-	la $t1, 0($a0)
-loop:
-	lbu $t0, 0($a1) #load a byte from source string
-	beq $a2, $0, exit
-	sb $t0, 0($a0) #store byte in destination string
-	addi $a0, $a0, 1 #increment both addresses
-	addi $a1, $a1, 1
-	addi $a2, $a2, -1
-	j loop
-exit:
-	sb $0, 0($a0)
-	la $v0, 0($t1)
+	addiu $sp $sp -4        	# Prologue (not necessary as it's a leaf function but wanted to be thorough)
+	sw $ra 0($sp)
+	
+	move $t1, $a0				# copy pointer to destination array into t1
+strncpy_loop:
+	beq $a2, $0, strncpy_exit	# if number of char left to copy equals 0, exit  
+	lb $t0, 0($a1) 				# load a byte from source string
+	sb $t0, 0($a0) 				# store byte in destination string
+	addi $a0, $a0, 1 			# increment destination array
+	addi $a1, $a1, 1 			# increment source array
+	addi $a2, $a2, -1 			# decrement chars left to copy
+	j strncpy_loop				# loop
+strncpy_exit:
+	sb $0, 0($a0)				# add a null terminator
+	move $v0, $t1				# load the start of dest array into v0
+
+	lw $ra, 0($sp)				# Epilogue
+	addiu $sp, $sp, 4
 	jr $ra
 
 #------------------------------------------------------------------------------
@@ -75,32 +87,29 @@ exit:
 # Returns: pointer to the copy of the string
 #------------------------------------------------------------------------------
 copy_of_str:
-	move $s4 $a0 # set t0 to passed in string pointer
-	
-	addiu $sp $sp -4 # Epilogue for STRLEN 
+	addiu $sp $sp -8  		# Prologue 
+	sw $s0 4($sp)
 	sw $ra 0($sp)
+
+	move $s0 $a0 			# set s0 to passed in string pointer
 	
-	jal strlen  # get the length of the string
+	jal strlen  			# get the length of the string
 	
-	lw $ra 0($sp)  # Prologue for STRLEN
-	addiu $sp $sp 4
+	move $a0 $v0 			# set a0 to number of bytes to allocate for syscall 
 	
-	move $a0 $v0 # set a0 to number of bytes to allocate for syscall 
-	li $v0 9 # load 9 into v0 for syscall
-	syscall # malloc memory 
+	li $v0 9 				# load 9 into v0 for syscall
+	syscall 				# malloc memory 
 	
-	move $a2 $a0 # set a2 to length of string for strcpy
-	addiu $a2 $a2 1 # add one to string length for null terminator
-	move $a1 $s4 # set a1 to string source pointer for strcpy
-	move $a0 $v0 # set a0 to allocated address for strcpy
+	move $a2 $a0 			# set a2 to length of string for strcpy
+	# addiu $a2 $a2 1			# add one to string length for null terminator
+	move $a1 $s0 			# set a1 to string source pointer for strcpy
+	move $a0 $v0 			# set a0 to allocated address for strcpy
 	
-	addiu $sp $sp -4  # Epilogue for STRNCPY
-	sw $ra 0($sp)
+	jal strncpy 			# copy string into a0
 	
-	jal strncpy # copy string into a0
-	
-	lw $ra 0($sp)	 # Prologue for STRNCPY
-	addiu $sp $sp 4
+	lw $ra 0($sp)
+	lw $s0 4($sp)	 		# Epilogue
+	addiu $sp $sp 8
 	
 	jr $ra
 

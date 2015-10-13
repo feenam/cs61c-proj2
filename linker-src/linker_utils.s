@@ -86,21 +86,13 @@ relocate_inst:
         move $s3 $a3
 
         move $a0 $s3            # load the reloctation table into a0 for symbol_for_addr
-        addiu $sp $sp -4
-        sw $ra 0($sp)
         jal symbol_for_addr     # run byte offset through symbol_for_addr
-        lw $ra, 0($sp)
-        addiu $sp, $sp, 4
 
         beq $v0 $0 MINUS1       # if null return -1
         
         move $a0 $s2            # load the symbol table into a0 for addr_for_symbol
         move $a1 $v0 
-        addiu $sp $sp -4
-        sw $ra 0($sp)
         jal addr_for_symbol     # run result through addr_for_symbol 
-        lw $ra, 0($sp)
-        addiu $sp, $sp, 4
         
         li $t4 -1
         beq $v0 $t4 MINUS1       # if null return -1 
@@ -113,16 +105,13 @@ relocate_inst:
         and $t1 $s0 $t0         # set t1 t0 masked top 6 bits of instruction
         or $v0 $v0 $t1          # or the two together
 
-        lw $s3, 16($sp)
-        lw $s2, 12($sp)
-        lw $s1, 8($sp)
-        lw $s0, 4($sp)
-        lw $ra, 0($sp)
-        addiu $sp, $sp, 20
+        j relocate_inst_epilogue
         jr $ra
 
 MINUS1:
         li $v0 -1 
+        
+relocate_inst_epilogue:
         lw $s3, 16($sp)
         lw $s2, 12($sp)
         lw $s1, 8($sp)

@@ -49,15 +49,35 @@
 #------------------------------------------------------------------------------
 addr_for_symbol:
         # YOUR CODE HERE
-        beq $a0, $0, name_not_found
-        lw $t0, 0($a0)
-        beq $t0, $a1, name_found
-        lw $a0, 8($a0)
-        j addr_for_symbol
+        addiu $sp $sp -12
+        sw $s0 0($sp)
+        sw $s1 4($sp)
+        sw $ra 8($sp)
+        
+        move $s0 $a0 # storing symbolList ptr
+        move $s1 $a1
+addr_for_symbol_loop:
+        beq $s0, $0, name_not_found
+        lw $a0, 0($s0)
+        move $a1, $s1
+
+        jal streq
+
+        beq $v0 $0 name_found
+        lw $s0, 8($s0)
+        j addr_for_symbol_loop
 name_found:
-        lw $v0, 4($a0)
+        lw $v0 4($s0)
+        lw $ra 8($sp)
+        lw $s1 4($sp)
+        lw $s0 0($sp)
+        addiu $sp $sp 12
         jr $ra
 name_not_found:
+        lw $ra 8($sp)
+        lw $s1 4($sp)
+        lw $s0 0($sp)
+        addiu $sp $sp 12
         li $v0, -1
         jr $ra
         
@@ -80,37 +100,40 @@ name_not_found:
 # Returns: the new list
 #------------------------------------------------------------------------------
 add_to_list:
-        addiu $sp $sp -8
+        addiu $sp $sp -24       # Prologue
         sw $ra 0($sp)
-        sw $a0 4($sp)
+        sw $s0 4($sp)
+        sw $s1 8($sp)
+        sw $s2 12($sp)
+        sw $s3 16($sp)
+        sw $s4 20($sp)
 
-        jal new_node    #v0 is new created node at this point
+        move $s0 $a0            # ptr to list
+        move $s1 $a1            # ptr to name of symbol
+        move $s2 $a2            # address of symbol
 
-        lw $ra 0($sp)
-        lw $a0 4($sp)   #restoring ra and a0
-        addiu $sp $sp 8
+        jal new_node            #v0 is new created node at this point
 
-        addiu $sp $sp -16
-        sw $ra 0($sp)
-        sw $a0 4($sp)
-        sw $v0 8($sp)
-        sw $a2 12($sp)
-
-        move $a0 $a1
+        move $s3 $v0            # saving address of new node
+        move $a0 $s1            # copying ptr to name of symbol
 
         jal copy_of_str
 
-        move $t0 $v0    #t0 = copied string
+        move $s4 $v0            # s4 = ptr to copy of string
 
-        lw $ra 0($sp)
-        lw $a0 4($sp)   
-        lw $v0 8($sp)
-        lw $a2 12($sp)
-        addiu $sp $sp 16
+        sw $s4 0($s3)           # saving name in new node
+        sw $s2 4($s3)           # saving address in new node
+        sw $s0 8($s3)           # update next ptr to original node
 
-        sw $t0 0($v0)
-        sw $a2 4($v0)
-        sw $a0 8($v0)
+        move $v0 $s3
+
+        lw $ra 0($sp)           # Epilogue
+        lw $s0 4($sp)   
+        lw $s1 8($sp)
+        lw $s2 12($sp)
+        lw $s3 16($sp)
+        lw $s4 20($sp)
+        addiu $sp $sp 24
 
         jr $ra
 
@@ -131,6 +154,9 @@ add_to_list:
 # Returns: a pointer to the name if found or NULL if not found
 #------------------------------------------------------------------------------
 symbol_for_addr:
+        addiu $sp $sp -4                # Prologue 
+        sw $ra 0($sp)
+
         beq $a0, $0, symbol_not_found   # Begin symbol_for_addr
         lw $t0, 4($a0)
         beq $t0, $a1, symbol_found
@@ -138,10 +164,13 @@ symbol_for_addr:
         j symbol_for_addr
 symbol_found:
         lw $v0, 0($a0)
-        jr $ra
+        j symbol_for_addr_epilogue
 symbol_not_found:
         li $v0, 0
-        jr $ra                  # End addr_for_symbol
+symbol_for_addr_epilogue:
+        lw $ra, 0($sp)                  # Epilogue
+        addiu $sp $sp 4        
+        jr $ra                          # End addr_for_symbol
 
 #------------------------------------------------------------------------------
 # function print_list() - DO NOT MODIFY THIS FUNCTION
