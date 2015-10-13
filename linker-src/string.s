@@ -51,7 +51,7 @@ end_strlen:
 strncpy:
 	la $t1, 0($a0)
 loop:
-	lbu $t0, 0($a1)
+	lb $t0, 0($a1)
 	beq $a2, $0, exit
 	sb $t0, 0($a0) 
 	addi $a0, $a0, 1 
@@ -76,7 +76,7 @@ exit:
 #------------------------------------------------------------------------------
 copy_of_str:
 	# YOUR CODE HERE	
-	addiu $sp $sp -12 # Epilogue 
+	addiu $sp $sp -12 # Epilogue for STRLEN 
 	sw $s1 8($sp)
 	sw $s0 4($sp)
 	sw $ra 0($sp)
@@ -92,7 +92,6 @@ copy_of_str:
 	syscall # malloc memory 
 	
 	move $a2 $s1 # set a2 to length of string for strcpy
-	addiu $a2 $a2 1 # add one to string length for null terminator
 	move $a1 $s0 # set a1 to string source pointer for strcpy
 	move $a0 $v0 # set a0 to allocated address for strcpy
 	
@@ -100,7 +99,7 @@ copy_of_str:
 	
 	lw $s1 8($sp)
 	lw $s0 4($sp)
-	lw $ra 0($sp)	 # Prologue 
+	lw $ra 0($sp)	 # Prologue for STRNCPY
 	addiu $sp $sp 12
 	
 	jr $ra

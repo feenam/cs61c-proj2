@@ -29,7 +29,7 @@
 .include "parsetools.s"
 
 .data
-textLabel:      .asciiz ".text\r"
+textLabel:      .asciiz ".text"
 symLabel:       .asciiz ".symbol"
 relocLabel: .asciiz ".relocation"
 
@@ -86,22 +86,12 @@ relocate_inst:
         move $s3 $a3
 
         move $a0 $s3            # load the reloctation table into a0 for symbol_for_addr
-        addiu $sp $sp -4
-        sw $ra 0($sp)
         jal symbol_for_addr     # run byte offset through symbol_for_addr
-        lw $ra, 0($sp)
-        addiu $sp, $sp, 4
-
         beq $v0 $0 MINUS1       # if null return -1
         
         move $a0 $s2            # load the symbol table into a0 for addr_for_symbol
         move $a1 $v0 
-        addiu $sp $sp -4
-        sw $ra 0($sp)
-        jal addr_for_symbol     # run result through addr_for_symbol 
-        lw $ra, 0($sp)
-        addiu $sp, $sp, 4
-        
+        jal addr_for_symbol     # run result through addr_for_symbol         
         li $t4 -1
         beq $v0 $t4 MINUS1       # if null return -1 
         

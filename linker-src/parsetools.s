@@ -37,7 +37,7 @@
 #------------------------------------------------------------------------------
 hex_to_str:
 	li $t0 0x0000000F 	# create a mask for the bottom 4 bits
-	li $t1 28 			# create count of shifts 
+	li $t1 28
 LOOP:
 	srlv $t2 $a0 $t1 	# shift intput integer to 4 bits
 	and $t2 $t2 $t0 	# AND with mask
