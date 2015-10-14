@@ -27,6 +27,7 @@ tab:	.asciiz "\t"
 # Returns: the length of the string
 #------------------------------------------------------------------------------
 strlen:
+	# YOUR CODE HERE
 	addiu $v0, $0, 0
 strlen_loop:				
 	lb $t0, 0($a0)
@@ -50,10 +51,10 @@ end_strlen:
 strncpy:
 	la $t1, 0($a0)
 loop:
-	lbu $t0, 0($a1) #load a byte from source string
+	lb $t0, 0($a1)
 	beq $a2, $0, exit
-	sb $t0, 0($a0) #store byte in destination string
-	addi $a0, $a0, 1 #increment both addresses
+	sb $t0, 0($a0) 
+	addi $a0, $a0, 1 
 	addi $a1, $a1, 1
 	addi $a2, $a2, -1
 	j loop
@@ -61,7 +62,6 @@ exit:
 	sb $0, 0($a0)
 	la $v0, 0($t1)
 	jr $ra
-
 #------------------------------------------------------------------------------
 # function copy_of_str()
 #------------------------------------------------------------------------------
@@ -75,32 +75,32 @@ exit:
 # Returns: pointer to the copy of the string
 #------------------------------------------------------------------------------
 copy_of_str:
-	move $s4 $a0 # set t0 to passed in string pointer
-	
-	addiu $sp $sp -4 # Epilogue for STRLEN 
+	# YOUR CODE HERE	
+	addiu $sp $sp -12 # Epilogue for STRLEN 
+	sw $s1 8($sp)
+	sw $s0 4($sp)
 	sw $ra 0($sp)
-	
+
+	move $s0 $a0 #copy a0 to s0
+
 	jal strlen  # get the length of the string
 	
-	lw $ra 0($sp)  # Prologue for STRLEN
-	addiu $sp $sp 4
-	
-	move $a0 $v0 # set a0 to number of bytes to allocate for syscall 
+	move $s1 $v0 # store returned value
+
+	move $a0 $s1 # set a0 to number of bytes to allocate for syscall 
 	li $v0 9 # load 9 into v0 for syscall
 	syscall # malloc memory 
 	
-	move $a2 $a0 # set a2 to length of string for strcpy
-	addiu $a2 $a2 1 # add one to string length for null terminator
-	move $a1 $s4 # set a1 to string source pointer for strcpy
+	move $a2 $s1 # set a2 to length of string for strcpy
+	move $a1 $s0 # set a1 to string source pointer for strcpy
 	move $a0 $v0 # set a0 to allocated address for strcpy
-	
-	addiu $sp $sp -4  # Epilogue for STRNCPY
-	sw $ra 0($sp)
 	
 	jal strncpy # copy string into a0
 	
+	lw $s1 8($sp)
+	lw $s0 4($sp)
 	lw $ra 0($sp)	 # Prologue for STRNCPY
-	addiu $sp $sp 4
+	addiu $sp $sp 12
 	
 	jr $ra
 

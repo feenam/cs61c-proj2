@@ -35,15 +35,24 @@ relocLabel: .asciiz ".relocation"
 
 .text
 
+        
 #------------------------------------------------------------------------------
-# function inst_needs_relocation()
+# function relocate_inst()
 #------------------------------------------------------------------------------
-# Returns whether the given instruction needs relocation.
+# Given an instruction that needs relocation, relocates the instruction based
+# on the given symbol and relocation table.
+#
+# You should return error if 1) the addr is not in the relocation table or
+# 2) the symbol name is not in the symbol table. You may assume otherwise the 
+# relocation will happen successfully.
 #
 # Arguments:
-#  $a0 = 32-bit MIPS instruction
+#  $a0 = an instruction that needs relocating
+#  $a1 = the byte offset of the instruction in the current file
+#  $a2 = the symbol table
+#  $a3 = the relocation table
 #
-# Returns: 1 if the instruction needs relocation, 0 otherwise.
+# Returns: the relocated instruction, or -1 if error
 #------------------------------------------------------------------------------
 inst_needs_relocation:
         srl $a0 $a0 26              # create count of shifts
@@ -86,22 +95,12 @@ relocate_inst:
         move $s3 $a3
 
         move $a0 $s3            # load the reloctation table into a0 for symbol_for_addr
-        addiu $sp $sp -4
-        sw $ra 0($sp)
         jal symbol_for_addr     # run byte offset through symbol_for_addr
-        lw $ra, 0($sp)
-        addiu $sp, $sp, 4
-
         beq $v0 $0 MINUS1       # if null return -1
         
         move $a0 $s2            # load the symbol table into a0 for addr_for_symbol
         move $a1 $v0 
-        addiu $sp $sp -4
-        sw $ra 0($sp)
-        jal addr_for_symbol     # run result through addr_for_symbol 
-        lw $ra, 0($sp)
-        addiu $sp, $sp, 4
-        
+        jal addr_for_symbol     # run result through addr_for_symbol         
         li $t4 -1
         beq $v0 $t4 MINUS1       # if null return -1 
         
@@ -110,7 +109,7 @@ relocate_inst:
         and $v0 $v0 $t0         # set top 6 bits of absolute address to 0
         
         li $t0 0xFC000000       # set a mask for the top 6 bits
-        and $t1 $s0 $t0         # set t1 t0 masked top 6 bits of instruction
+        and $t1 $s0 $t0         # set t1 to masked top 6 bits of instruction
         or $v0 $v0 $t1          # or the two together
 
         lw $s3, 16($sp)
